@@ -54,7 +54,7 @@ CLEAN="make -C src/ clean"
 BUILT_MODULE_NAME=$bbr_file
 BUILT_MODULE_LOCATION=src/
 DEST_MODULE_LOCATION=/updates/net/ipv4
-PACKAGE_NAME=tcp-pixie
+PACKAGE_NAME=pixie
 PACKAGE_VERSION=1.0.0
 REMAKE_INITRD=yes
 EOF
@@ -62,26 +62,26 @@ EOF
 # Start dkms install
 echo "===== Start installation ====="
 
-cp -R . /usr/src/tcp-pixie-1.0.0
+cp -R . /usr/src/pixie-1.0.0
 
-dkms add -m tcp-pixie -v 1.0.0
+dkms add -m pixie -v 1.0.0
 if [ ! $? -eq 0 ]; then
     echo "DKMS add failed"
-    dkms remove -m tcp-pixie/1.0.0 --all
+    dkms remove -m pixie/1.0.0 --all
     exit 1
 fi
 
-dkms build -m tcp-pixie -v 1.0.0
+dkms build -m pixie -v 1.0.0
 if [ ! $? -eq 0 ]; then
     echo "DKMS build failed"
-    dkms remove -m tcp-pixie/1.0.0 --all
+    dkms remove -m pixie/1.0.0 --all
     exit 1
 fi
 
-dkms install -m tcp-pixie -v 1.0.0
+dkms install -m pixie -v 1.0.0
 if [ ! $? -eq 0 ]; then
     echo "DKMS install failed"
-    dkms remove -m tcp-pixie/1.0.0 --all
+    dkms remove -m pixie/1.0.0 --all
     exit 1
 fi
 
@@ -90,7 +90,7 @@ modprobe $bbr_file
 
 if [ ! $? -eq 0 ]; then
     echo "modprobe failed, please check your environment"
-    echo "Please use \"dkms remove -m tcp-pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
     exit 1
 fi
 
@@ -98,7 +98,7 @@ sysctl -w net.core.default_qdisc=fq
 
 if [ ! $? -eq 0 ]; then
     echo "sysctl test failed, please check your environment"
-    echo "Please use \"dkms remove -m tcp-pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
     exit 1
 fi
 
@@ -106,7 +106,7 @@ sysctl -w net.ipv4.tcp_congestion_control=pixie
 
 if [ ! $? -eq 0 ]; then
     echo "sysctl test failed, please check your environment"
-    echo "Please use \"dkms remove -m tcp-pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
     exit 1
 fi
 
@@ -114,12 +114,12 @@ fi
 
 echo $bbr_file | sudo tee -a /etc/modules
 echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_congestion_control = tcp-pixie" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control = pixie" >> /etc/sysctl.conf
 sysctl -p
 
 if [ ! $? -eq 0 ]; then
     echo "sysctl failed, please check your environment"
-    echo "Please use \"dkms remove -m tcp-pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
     exit 1
 fi
 
