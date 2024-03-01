@@ -5,7 +5,7 @@ if [ $(id -u) -ne 0 ]; then
     exit 1 
 fi
 
-kernel_ver=1.0.0
+kernel_ver="1.0.0"
 algo=pixie
 
 prefix=tmp
