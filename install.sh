@@ -1,15 +1,18 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ $(id -u) -ne 0 ]; then 
     echo "refuse to continue without root permission" 
     exit 1 
 fi
 
-prefix=alg
+kernel_ver=1.0.0
+algo=pixie
+
+prefix=tmp
 mkdir -p $prefix
 cd $prefix
 
-bbr_file=alg
+bbr_file=tcp_$algo
 bbr_src=$bbr_file.c
 bbr_obj=$bbr_file.o
 
@@ -51,34 +54,34 @@ CLEAN="make -C src/ clean"
 BUILT_MODULE_NAME=$bbr_file
 BUILT_MODULE_LOCATION=src/
 DEST_MODULE_LOCATION=/updates/net/ipv4
-PACKAGE_NAME=pixie
-PACKAGE_VERSION=1.0.0
-REMAKE_INITRD=yes
+PACKAGE_NAME=$algo
+PACKAGE_VERSION=$kernel_ver
+AUTO_INSTALL=yes
 EOF
 
 # Start dkms install
 echo "===== Start installation ====="
 
-cp -R . /usr/src/pixie-1.0.0
+cp -R . /usr/src/$algo-$kernel_ver
 
-dkms add -m pixie -v 1.0.0
+dkms add -m $algo -v $kernel_ver
 if [ ! $? -eq 0 ]; then
     echo "DKMS add failed"
-    dkms remove -m pixie/1.0.0 --all
+    dkms remove -m $algo/$kernel_ver --all
     exit 1
 fi
 
-dkms build -m pixie -v 1.0.0
+dkms build -m $algo -v $kernel_ver
 if [ ! $? -eq 0 ]; then
     echo "DKMS build failed"
-    dkms remove -m pixie/1.0.0 --all
+    dkms remove -m $algo/$kernel_ver --all
     exit 1
 fi
 
-dkms install -m pixie -v 1.0.0
+dkms install -m $algo -v $kernel_ver
 if [ ! $? -eq 0 ]; then
     echo "DKMS install failed"
-    dkms remove -m pixie/1.0.0 --all
+    dkms remove -m $algo/$kernel_ver --all
     exit 1
 fi
 
@@ -87,23 +90,7 @@ modprobe $bbr_file
 
 if [ ! $? -eq 0 ]; then
     echo "modprobe failed, please check your environment"
-    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
-    exit 1
-fi
-
-sysctl -w net.core.default_qdisc=fq
-
-if [ ! $? -eq 0 ]; then
-    echo "sysctl test failed, please check your environment"
-    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
-    exit 1
-fi
-
-sysctl -w net.ipv4.tcp_congestion_control=pixie
-
-if [ ! $? -eq 0 ]; then
-    echo "sysctl test failed, please check your environment"
-    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m $algo/$kernel_ver --all\" to remove the dkms module"
     exit 1
 fi
 
@@ -111,12 +98,12 @@ fi
 
 echo $bbr_file | sudo tee -a /etc/modules
 echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_congestion_control = pixie" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control = $algo" >> /etc/sysctl.conf
 sysctl -p
 
 if [ ! $? -eq 0 ]; then
     echo "sysctl failed, please check your environment"
-    echo "Please use \"dkms remove -m pixie/1.0.0 --all\" to remove the dkms module"
+    echo "Please use \"dkms remove -m $algo/$kernel_ver --all\" to remove the dkms module"
     exit 1
 fi
 
