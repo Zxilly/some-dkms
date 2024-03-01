@@ -6,19 +6,19 @@ if [ $(id -u) -ne 0 ]; then
 fi
 
 kernel_ver="1.0.0"
-algo=pixie
+algo=alg
 
 prefix=tmp
 mkdir -p $prefix
 cd $prefix
 
-bbr_file=tcp_$algo
-bbr_src=$bbr_file.c
-bbr_obj=$bbr_file.o
+alg_file=tcp_$algo
+alg_src=$alg_file.c
+alg_obj=$alg_file.o
 
 mkdir -p src
 cd src
-wget -O ./$bbr_src https://raw.githubusercontent.com/Zxilly/some-dkms/master/alg.c
+wget -O ./$alg_src https://raw.githubusercontent.com/Zxilly/some-dkms/master/alg.c
 
 if [ ! $? -eq 0 ]; then
     echo "Download Error"
@@ -27,11 +27,11 @@ if [ ! $? -eq 0 ]; then
     exit 1
 fi
 
-echo "===== Succussfully downloaded $bbr_src ====="
+echo "===== Succussfully downloaded $alg_src ====="
 
 # Create Makefile
 cat > ./Makefile << EOF
-obj-m:=$bbr_obj
+obj-m:=$alg_obj
 
 default:
 	make -C /lib/modules/\$(shell uname -r)/build M=\$(PWD)/src modules
@@ -40,8 +40,8 @@ clean:
 	-rm modules.order
 	-rm Module.symvers
 	-rm .[!.]* ..?*
-	-rm $bbr_file.mod
-	-rm $bbr_file.mod.c
+	-rm $alg_file.mod
+	-rm $alg_file.mod.c
 	-rm *.o
 	-rm *.cmd
 EOF
@@ -51,7 +51,7 @@ cd ..
 cat > ./dkms.conf << EOF
 MAKE="'make' -C src/"
 CLEAN="make -C src/ clean"
-BUILT_MODULE_NAME=$bbr_file
+BUILT_MODULE_NAME=$alg_file
 BUILT_MODULE_LOCATION=src/
 DEST_MODULE_LOCATION=/updates/net/ipv4
 PACKAGE_NAME=$algo
@@ -86,7 +86,7 @@ if [ ! $? -eq 0 ]; then
 fi
 
 # Test loading module
-modprobe $bbr_file
+modprobe $alg_file
 
 if [ ! $? -eq 0 ]; then
     echo "modprobe failed, please check your environment"
@@ -96,7 +96,7 @@ fi
 
 # Auto-load kernel module at system startup
 
-echo $bbr_file | sudo tee -a /etc/modules
+echo $alg_file | sudo tee -a /etc/modules
 echo "net.core.default_qdisc = fq" >> /etc/sysctl.conf
 echo "net.ipv4.tcp_congestion_control = $algo" >> /etc/sysctl.conf
 sysctl -p
