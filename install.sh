@@ -5,14 +5,11 @@ if [ $(id -u) -ne 0 ]; then
     exit 1 
 fi
 
-read -p "Enter desired kernel version (4.15, 5.4, etc.): " kernel_ver
-read -p "Enter BBR variant (bbr, tsunami, tsunamio, etc.): " algo
-
 prefix=alg
 mkdir -p $prefix
 cd $prefix
 
-bbr_file=tcp_alg
+bbr_file=alg
 bbr_src=$bbr_file.c
 bbr_obj=$bbr_file.o
 
